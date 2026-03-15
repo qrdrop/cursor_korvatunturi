@@ -13,7 +13,7 @@ from artifacts.models import Artifact, PackageMetadata
 from artifacts.services import ArtifactMetadataExtractor
 from auditing.services import log_audit_event
 from repositories.models import Repository
-from storage.backends import LocalFileStorageBackend, StorageBackend
+from artifact_storage.backends import LocalFileStorageBackend, StorageBackend
 
 
 class _TempUploadedFile:

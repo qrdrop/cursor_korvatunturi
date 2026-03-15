@@ -7,7 +7,7 @@ from django.utils import timezone
 
 from artifacts.models import Artifact
 from auditing.services import log_audit_event
-from storage.backends import LocalFileStorageBackend
+from artifact_storage.backends import LocalFileStorageBackend
 
 
 @shared_task

@@ -28,7 +28,7 @@ INSTALLED_APPS = [
     "rest_framework.authtoken",
     "repositories",
     "artifacts",
-    "storage",
+    "artifact_storage",
     "users",
     "proxy",
     "auditing",

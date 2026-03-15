@@ -13,7 +13,7 @@ from artifacts.services import process_artifact_upload
 from auditing.services import log_audit_event
 from proxy.services import fetch_and_cache_remote_artifact
 from repositories.models import Repository
-from storage.backends import LocalFileStorageBackend
+from artifact_storage.backends import LocalFileStorageBackend
 from users.permissions import can_read, can_write
 
 

@@ -12,7 +12,7 @@ from packaging.utils import InvalidWheelFilename, parse_wheel_filename
 from artifacts.models import Artifact, PackageMetadata
 from auditing.services import log_audit_event
 from repositories.models import Repository
-from storage.backends import LocalFileStorageBackend, StorageBackend
+from artifact_storage.backends import LocalFileStorageBackend, StorageBackend
 
 RPM_FILE_RE = re.compile(
     r"^(?P<name>.+)-(?P<version>[^-]+)-(?P<release>[^-]+)\.(?P<arch>[^.]+)\.rpm$"

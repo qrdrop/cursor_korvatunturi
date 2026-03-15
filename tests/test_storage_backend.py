@@ -4,7 +4,7 @@ from pathlib import Path
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
 
-from storage.backends import LocalFileStorageBackend
+from artifact_storage.backends import LocalFileStorageBackend
 
 
 class LocalStorageBackendTests(TestCase):
