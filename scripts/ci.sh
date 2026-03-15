@@ -1,8 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+cd "$REPO_ROOT"
+
+export PATH="$HOME/.local/bin:$PATH"
+export PIP_DISABLE_PIP_VERSION_CHECK=1
+
 echo "Installing dependencies..."
-pip3 install --user --break-system-packages -r requirements.txt
+python3 -m pip install --user --break-system-packages -r requirements.txt
 
 export DJANGO_USE_SQLITE="${DJANGO_USE_SQLITE:-true}"
 export DJANGO_SECRET_KEY="${DJANGO_SECRET_KEY:-ci-secret-key}"

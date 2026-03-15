@@ -1,0 +1,6 @@
+{
+  "name": "django-artifact-repository",
+  "install": "bash -lc 'python3 -m pip install --user --upgrade --break-system-packages pip && python3 -m pip install --user --break-system-packages -r requirements.txt'",
+  "update": "bash -lc 'python3 -m pip install --user --break-system-packages -r requirements.txt'",
+  "start": "bash -lc 'echo \"Cloud agent ready for Django artifact repository\"'"
+}

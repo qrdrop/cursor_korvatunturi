@@ -68,6 +68,12 @@ Run tests (coverage gate 80%) and schema generation:
 ./scripts/ci.sh
 ```
 
+## Cloud Agent Environment
+
+This repository includes `.cursor/environment.json` so cloud agents preinstall
+Python dependencies on startup and can run `./scripts/ci.sh` without additional
+manual setup.
+
 ## OpenAPI/OpenSpec Contract
 
 Generate API schema:
