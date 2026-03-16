@@ -1,0 +1,49 @@
+{% extends "webui/base.html" %}
+{% block content %}
+<div class="card">
+    <h2>Browse Packages</h2>
+    <form method="get">
+        <label for="repo">Repository</label>
+        <select id="repo" name="repo">
+            <option value="">All repositories</option>
+            {% for repository in repositories %}
+                <option value="{{ repository.id }}" {% if repo_id == repository.id|stringformat:"s" %}selected{% endif %}>
+                    {{ repository.name }} ({{ repository.type }})
+                </option>
+            {% endfor %}
+        </select>
+        <label for="q">Search file name</label>
+        <input id="q" name="q" type="text" value="{{ query }}" placeholder="package name">
+        <button class="btn" type="submit">Apply Filters</button>
+    </form>
+</div>
+
+<div class="card">
+    <table>
+        <thead>
+        <tr>
+            <th>Artifact</th>
+            <th>Repository</th>
+            <th>Version</th>
+            <th>Architecture</th>
+            <th>Uploaded</th>
+            <th>Download</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for artifact in artifacts %}
+            <tr>
+                <td>{{ artifact.name }}</td>
+                <td>{{ artifact.repository.name }}</td>
+                <td>{{ artifact.version }}</td>
+                <td>{{ artifact.architecture }}</td>
+                <td>{{ artifact.uploaded_at }}</td>
+                <td><a href="/repo/{{ artifact.repository.name }}/{{ artifact.path }}">download</a></td>
+            </tr>
+        {% empty %}
+            <tr><td colspan="6">No matching artifacts.</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

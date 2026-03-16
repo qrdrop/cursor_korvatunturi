@@ -2,6 +2,7 @@ from rest_framework import serializers
 
 from artifacts.models import Artifact
 from repositories.models import Repository
+from repositories.policies import enabled_repository_types
 
 
 class RepositorySerializer(serializers.ModelSerializer):
@@ -11,6 +12,11 @@ class RepositorySerializer(serializers.ModelSerializer):
         read_only_fields = ("id", "created_at")
 
     def validate(self, attrs):
+        repository_type = attrs.get("type", getattr(self.instance, "type", None))
+        if repository_type and repository_type not in set(enabled_repository_types()):
+            raise serializers.ValidationError(
+                f"Repository type '{repository_type}' is disabled by admin policy."
+            )
         mode = attrs.get("mode", getattr(self.instance, "mode", Repository.Mode.LOCAL))
         remote_url = attrs.get("remote_url")
         if mode == Repository.Mode.REMOTE and not remote_url:

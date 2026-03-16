@@ -1,0 +1,12 @@
+{% extends "webui/base.html" %}
+{% block content %}
+<div class="card" style="max-width: 720px;">
+    <h2>Allowed Package Types (Admin)</h2>
+    <p>Disable types you do not want administrators to create as repositories.</p>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button class="btn" type="submit">Save Policy</button>
+    </form>
+</div>
+{% endblock %}

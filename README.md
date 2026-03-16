@@ -27,6 +27,8 @@ Service endpoints:
 
 - API root: `http://localhost:8000/api/`
 - Admin: `http://localhost:8000/admin/`
+- Web UI login: `http://localhost:8000/login/`
+- Web UI dashboard: `http://localhost:8000/dashboard/`
 - PyPI simple API: `http://localhost:8000/simple/`
 
 ## Core API Endpoints
@@ -37,17 +39,27 @@ Service endpoints:
 - `POST /api/artifacts/upload/`
 - `GET /repo/<repository>/<path>`
 
+## Web UI Features
+
+- Browse all accessible packages: `/packages/`
+- Browse repository contents: `/repositories/<name>/`
+- Upload packages from frontend: `/upload/`
+- Admin repository creation UI: `/admin/repositories/new/`
+- Admin package-type policy UI: `/admin/repository-types/`
+
 ## Project Layout
 
 - `artifact_repo/` Django project and settings
 - `repositories/` repository model
 - `artifacts/` artifact and metadata models + upload services
-- `storage/` storage backend abstraction
+- `artifact_storage/` storage backend abstraction
 - `users/` repository role model and permission logic
 - `proxy/` remote proxy fetch + cache cleanup
 - `auditing/` audit trail
 - `package_indexes/` Debian, RPM, and PyPI index generators
 - `api/` DRF endpoints
+- `webui/` Django template-based frontend
+- `demo/` command-line demo clients
 
 Detailed architecture: `docs/architecture.md`
 
@@ -57,9 +69,26 @@ Detailed architecture: `docs/architecture.md`
 pip3 install --user --break-system-packages -r requirements.txt
 export DJANGO_USE_SQLITE=true
 export DJANGO_SECURE_SSL_REDIRECT=false
+export DJANGO_INITIAL_ADMIN_USERNAME=admin
+export DJANGO_INITIAL_ADMIN_PASSWORD=admin123
 python3 manage.py migrate
+python3 manage.py init_admin
 python3 manage.py runserver
 ```
+
+The first-start admin bootstrap is controlled with:
+
+- `DJANGO_INITIAL_ADMIN_USERNAME`
+- `DJANGO_INITIAL_ADMIN_PASSWORD`
+- `DJANGO_INITIAL_ADMIN_EMAIL` (optional)
+
+## Package Upload Documentation
+
+See `docs/package_uploads.md` for step-by-step API and frontend upload guidance.
+
+## Demo Clients
+
+See `demo/README.md` for command-line demo clients for APT, RPM, PyPI, and MSI usage.
 
 ## CI Helper
 

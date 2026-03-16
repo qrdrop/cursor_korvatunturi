@@ -10,6 +10,7 @@
 - **auditing**: Immutable security and operational audit event trail.
 - **package_indexes**: Package index generation for Debian APT, RPM, and PyPI simple API output.
 - **api**: Django REST Framework endpoints for repository/artifact management and package delivery.
+- **webui**: Template-based frontend for browsing packages, uploads, and admin repository controls.
 
 ## Core Flow
 

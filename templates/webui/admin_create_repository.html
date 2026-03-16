@@ -1,0 +1,12 @@
+{% extends "webui/base.html" %}
+{% block content %}
+<div class="card" style="max-width: 720px;">
+    <h2>Create Repository (Admin)</h2>
+    <p>Repository type choices respect the currently allowed package type policy.</p>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button class="btn" type="submit">Create Repository</button>
+    </form>
+</div>
+{% endblock %}

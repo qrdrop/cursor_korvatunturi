@@ -14,6 +14,7 @@ from auditing.services import log_audit_event
 from proxy.services import fetch_and_cache_remote_artifact
 from repositories.models import Repository
 from artifact_storage.backends import LocalFileStorageBackend
+from users.models import UserRole
 from users.permissions import can_read, can_write
 
 
@@ -40,6 +41,11 @@ class RepositoryListCreateView(generics.ListCreateAPIView):
         if not (self.request.user.is_superuser or self.request.user.is_staff):
             raise PermissionDenied("Only admin users can create repositories.")
         repository = serializer.save()
+        UserRole.objects.get_or_create(
+            user=self.request.user,
+            repository=repository,
+            defaults={"role": UserRole.Role.ADMIN},
+        )
         log_audit_event(
             action="repository.created",
             actor=self.request.user,

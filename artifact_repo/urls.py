@@ -8,6 +8,7 @@ from api.views import ArtifactDownloadView, PyPISimpleIndexDetailView, PyPISimpl
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/", include("api.urls")),
+    path("", include("webui.urls")),
     path("repo/<str:repository>/<path:artifact_path>", ArtifactDownloadView.as_view(), name="artifact-download"),
     path("simple/", PyPISimpleIndexView.as_view(), name="pypi-simple-index"),
     path("simple/<str:package_name>/", PyPISimpleIndexDetailView.as_view(), name="pypi-simple-index-detail"),

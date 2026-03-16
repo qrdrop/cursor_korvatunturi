@@ -1,0 +1,40 @@
+{% extends "webui/base.html" %}
+{% block content %}
+<div class="card">
+    <h2>Repository: {{ repository.name }}</h2>
+    <p>Type: <strong>{{ repository.type }}</strong> | Mode: <strong>{{ repository.mode }}</strong></p>
+    {% if repository.mode == "remote" %}
+        <p>Remote URL: {{ repository.remote_url }}</p>
+    {% endif %}
+</div>
+
+<div class="card">
+    <h3>Artifacts</h3>
+    <table>
+        <thead>
+        <tr>
+            <th>Name</th>
+            <th>Version</th>
+            <th>Architecture</th>
+            <th>Size</th>
+            <th>Uploaded</th>
+            <th>Download</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for artifact in artifacts %}
+            <tr>
+                <td>{{ artifact.name }}</td>
+                <td>{{ artifact.version }}</td>
+                <td>{{ artifact.architecture }}</td>
+                <td>{{ artifact.size }}</td>
+                <td>{{ artifact.uploaded_at }}</td>
+                <td><a href="/repo/{{ repository.name }}/{{ artifact.path }}">download</a></td>
+            </tr>
+        {% empty %}
+            <tr><td colspan="6">No artifacts in this repository yet.</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
