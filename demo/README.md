@@ -28,6 +28,6 @@ python3 demo/repo_client.py --help
 - `demo/apt_demo.sh`
 - `demo/rpm_demo.sh`
 - `demo/pypi_demo.sh`
-- `demo/msi_demo.sh`
+- `demo/msi_demo.sh` (supports both `.msi` and `.msu`)
 
 Each script demonstrates repository creation, package upload via API, and package listing.

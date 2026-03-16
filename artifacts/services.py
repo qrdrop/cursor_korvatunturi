@@ -19,6 +19,8 @@ RPM_FILE_RE = re.compile(
 )
 DEB_FILE_RE = re.compile(r"^(?P<name>.+)_(?P<version>[^_]+)_(?P<arch>[^.]+)\.deb$")
 MSI_FILE_RE = re.compile(r"^(?P<name>.+)-(?P<version>[^-]+)-(?P<arch>[^.]+)\.msi$")
+MSU_FILE_RE = re.compile(r"^(?P<name>.+)-(?P<version>[^-]+)-(?P<arch>[^.]+)\.msu$")
+MSU_KB_RE = re.compile(r"^(?P<name>.*?)(?P<kb>KB\d+)(?:-(?P<arch>x64|x86|arm64))?\.msu$", re.IGNORECASE)
 PYPI_SDIST_RE = re.compile(r"^(?P<name>.+)-(?P<version>[^-]+)\.tar\.gz$")
 
 
@@ -41,7 +43,7 @@ class ArtifactMetadataExtractor:
             return Repository.Type.DEB
         if lowered.endswith(".rpm"):
             return Repository.Type.RPM
-        if lowered.endswith(".msi"):
+        if lowered.endswith(".msi") or lowered.endswith(".msu"):
             return Repository.Type.MSI
         if lowered.endswith(".whl") or lowered.endswith(".tar.gz"):
             return Repository.Type.PYPI
@@ -136,21 +138,56 @@ class ArtifactMetadataExtractor:
 
     @classmethod
     def _extract_msi(cls, filename: str) -> ExtractedMetadata:
-        match = MSI_FILE_RE.match(filename)
-        if not match:
+        lowered = filename.lower()
+        if lowered.endswith(".msi"):
+            match = MSI_FILE_RE.match(filename)
+            if not match:
+                return ExtractedMetadata(
+                    package_name=Path(filename).stem,
+                    version="",
+                    architecture="x64",
+                    dependencies=[],
+                    metadata_json={"filename": filename, "parser": "msi-fallback", "installer_type": "msi"},
+                )
             return ExtractedMetadata(
-                package_name=Path(filename).stem,
-                version="",
-                architecture="x64",
+                package_name=match.group("name"),
+                version=match.group("version"),
+                architecture=match.group("arch"),
                 dependencies=[],
-                metadata_json={"filename": filename, "parser": "msi-fallback"},
+                metadata_json={"filename": filename, "parser": "msi-filename", "installer_type": "msi"},
             )
+
+        match = MSU_FILE_RE.match(filename)
+        if match:
+            return ExtractedMetadata(
+                package_name=match.group("name"),
+                version=match.group("version"),
+                architecture=match.group("arch"),
+                dependencies=[],
+                metadata_json={"filename": filename, "parser": "msu-filename", "installer_type": "msu"},
+            )
+
+        kb_match = MSU_KB_RE.match(filename)
+        if kb_match:
+            package_name = (kb_match.group("name") or "windows-update").strip("-_")
+            if not package_name:
+                package_name = "windows-update"
+            arch = kb_match.group("arch") or "x64"
+            version = kb_match.group("kb").upper()
+            return ExtractedMetadata(
+                package_name=package_name,
+                version=version,
+                architecture=arch,
+                dependencies=[],
+                metadata_json={"filename": filename, "parser": "msu-kb", "installer_type": "msu"},
+            )
+
         return ExtractedMetadata(
-            package_name=match.group("name"),
-            version=match.group("version"),
-            architecture=match.group("arch"),
+            package_name=Path(filename).stem,
+            version="",
+            architecture="x64",
             dependencies=[],
-            metadata_json={"filename": filename, "parser": "msi-filename"},
+            metadata_json={"filename": filename, "parser": "msu-fallback", "installer_type": "msu"},
         )
 
 

@@ -83,6 +83,23 @@ class ApiFlowTests(APITestCase):
         )
         self.assertEqual(response.status_code, 400)
 
+    def test_upload_accepts_msu_in_windows_repo(self):
+        windows_repo = Repository.objects.create(
+            name="windows-updates",
+            type=Repository.Type.MSI,
+            mode=Repository.Mode.LOCAL,
+        )
+        UserRole.objects.create(user=self.user, repository=windows_repo, role=UserRole.Role.MAINTAINER)
+        response = self.client.post(
+            "/api/artifacts/upload/",
+            {
+                "repository": windows_repo.id,
+                "file": self._make_file("windows10.0-KB5030219-x64.msu", b"msu-bytes"),
+            },
+            format="multipart",
+        )
+        self.assertEqual(response.status_code, 201, response.content)
+
     @staticmethod
     def _make_file(name: str, content: bytes):
         from django.core.files.uploadedfile import SimpleUploadedFile

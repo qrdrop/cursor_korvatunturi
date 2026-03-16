@@ -22,6 +22,10 @@ class MetadataExtractorTests(SimpleTestCase):
             ArtifactMetadataExtractor.detect_repository_type("installer-1.2-x64.msi"),
             Repository.Type.MSI,
         )
+        self.assertEqual(
+            ArtifactMetadataExtractor.detect_repository_type("windows10.0-kb5030219-x64.msu"),
+            Repository.Type.MSI,
+        )
 
     def test_extract_deb_filename_metadata(self):
         metadata = ArtifactMetadataExtractor.extract(Repository.Type.DEB, "hello_2.0_amd64.deb")
@@ -50,4 +54,10 @@ class MetadataExtractorTests(SimpleTestCase):
         metadata = ArtifactMetadataExtractor.extract(Repository.Type.MSI, "agent-3.4.1-x64.msi")
         self.assertEqual(metadata.package_name, "agent")
         self.assertEqual(metadata.version, "3.4.1")
+        self.assertEqual(metadata.architecture, "x64")
+
+    def test_extract_msu_filename_metadata(self):
+        metadata = ArtifactMetadataExtractor.extract(Repository.Type.MSI, "windows10.0-KB5030219-x64.msu")
+        self.assertEqual(metadata.package_name, "windows10.0")
+        self.assertEqual(metadata.version, "KB5030219")
         self.assertEqual(metadata.architecture, "x64")

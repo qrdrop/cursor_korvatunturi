@@ -7,7 +7,7 @@ Supported first-class repository types:
 - Debian APT (`.deb`)
 - RPM (`.rpm`)
 - PyPI (`.whl`, `.tar.gz`)
-- MSI (`.msi`)
+- Windows packages (`.msi`, `.msu`)
 
 ## Tech Stack
 
@@ -93,7 +93,7 @@ See `docs/package_uploads.md` for step-by-step API and frontend upload guidance.
 
 ## Demo Clients
 
-See `demo/README.md` for command-line demo clients for APT, RPM, PyPI, and MSI usage.
+See `demo/README.md` for command-line demo clients for APT, RPM, PyPI, and Windows (`.msi`/`.msu`) usage.
 
 ## CI Helper
 

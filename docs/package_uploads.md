@@ -10,7 +10,7 @@ You can upload packages from either the web UI or the API.
    - `.deb` -> `deb`
    - `.rpm` -> `rpm`
    - `.whl` / `.tar.gz` -> `pypi`
-   - `.msi` -> `msi`
+   - `.msi` / `.msu` -> `msi`
 
 ## Option A: Web UI Upload
 
