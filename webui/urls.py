@@ -19,9 +19,9 @@ urlpatterns = [
     path("packages/", PackageBrowseView.as_view(), name="webui-packages"),
     path("repositories/<str:name>/", RepositoryDetailView.as_view(), name="webui-repository-detail"),
     path("upload/", UploadArtifactView.as_view(), name="webui-upload"),
-    path("admin/repositories/new/", AdminCreateRepositoryView.as_view(), name="webui-admin-create-repository"),
+    path("manage/repositories/new/", AdminCreateRepositoryView.as_view(), name="webui-admin-create-repository"),
     path(
-        "admin/repository-types/",
+        "manage/repository-types/",
         AdminRepositoryTypePolicyView.as_view(),
         name="webui-admin-repository-types",
     ),

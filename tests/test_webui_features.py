@@ -19,6 +19,11 @@ class WebUiFeatureTests(TestCase):
     def setUp(self):
         self.client = Client()
         self.user = get_user_model().objects.create_user(username="web", password="pw")
+        self.admin = get_user_model().objects.create_superuser(
+            username="web-admin",
+            email="admin@example.com",
+            password="pw",
+        )
         self.repo = Repository.objects.create(name="web-pypi", type=Repository.Type.PYPI, mode=Repository.Mode.LOCAL)
         UserRole.objects.create(user=self.user, repository=self.repo, role=UserRole.Role.MAINTAINER)
 
@@ -55,3 +60,14 @@ class WebUiFeatureTests(TestCase):
         response = self.client.get("/packages/")
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "demo_pkg-1.0.0-py3-none-any.whl")
+
+    def test_legacy_admin_repo_url_redirects(self):
+        self.client.login(username="web-admin", password="pw")
+        response = self.client.get("/admin/repositories/new/")
+        self.assertEqual(response.status_code, 302)
+        self.assertIn("/manage/repositories/new/", response.url)
+
+    def test_manage_admin_repo_page_works(self):
+        self.client.login(username="web-admin", password="pw")
+        response = self.client.get("/manage/repositories/new/")
+        self.assertEqual(response.status_code, 200)
