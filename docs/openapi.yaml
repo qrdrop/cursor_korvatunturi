@@ -247,6 +247,12 @@ components:
         package_name:
           type: string
           readOnly: true
+        dependencies:
+          type: string
+          readOnly: true
+        metadata_json:
+          type: string
+          readOnly: true
       required:
       - name
       - path
