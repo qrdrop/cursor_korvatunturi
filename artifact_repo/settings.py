@@ -150,8 +150,14 @@ MAX_ARTIFACT_SIZE = int(env("MAX_ARTIFACT_SIZE", str(2 * 1024 * 1024 * 1024)))
 
 # Security defaults for production deployments behind HTTPS.
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
-SECURE_SSL_REDIRECT = env("DJANGO_SECURE_SSL_REDIRECT", "true").lower() == "true"
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SECURE = True
+SECURE_SSL_REDIRECT = env("DJANGO_SECURE_SSL_REDIRECT", "false").lower() == "true"
+SESSION_COOKIE_SECURE = env(
+    "DJANGO_SESSION_COOKIE_SECURE",
+    "true" if SECURE_SSL_REDIRECT else "false",
+).lower() == "true"
+CSRF_COOKIE_SECURE = env(
+    "DJANGO_CSRF_COOKIE_SECURE",
+    "true" if SECURE_SSL_REDIRECT else "false",
+).lower() == "true"
 SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_BROWSER_XSS_FILTER = True

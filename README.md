@@ -56,6 +56,7 @@ Detailed architecture: `docs/architecture.md`
 ```bash
 pip3 install --user --break-system-packages -r requirements.txt
 export DJANGO_USE_SQLITE=true
+export DJANGO_SECURE_SSL_REDIRECT=false
 python3 manage.py migrate
 python3 manage.py runserver
 ```
