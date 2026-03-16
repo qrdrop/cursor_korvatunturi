@@ -68,6 +68,7 @@ Detailed architecture: `docs/architecture.md`
 ```bash
 pip3 install --user --break-system-packages -r requirements.txt
 export DJANGO_USE_SQLITE=true
+export DJANGO_DEBUG=true
 export DJANGO_SECURE_SSL_REDIRECT=false
 export DJANGO_INITIAL_ADMIN_USERNAME=admin
 export DJANGO_INITIAL_ADMIN_PASSWORD=admin123
@@ -75,6 +76,8 @@ python3 manage.py migrate
 python3 manage.py init_admin
 python3 manage.py runserver
 ```
+
+If admin/frontend pages appear unstyled, confirm `DJANGO_DEBUG=true` in local development.
 
 The first-start admin bootstrap is controlled with:
 

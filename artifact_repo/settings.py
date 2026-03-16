@@ -14,7 +14,9 @@ def env(name: str, default: str | None = None) -> str | None:
 
 
 SECRET_KEY = env("DJANGO_SECRET_KEY", "unsafe-dev-key-change-me")
-DEBUG = env("DJANGO_DEBUG", "false").lower() == "true"
+# Development-friendly default: enables static asset serving for runserver.
+# Production deployments should explicitly set DJANGO_DEBUG=false.
+DEBUG = env("DJANGO_DEBUG", "true").lower() == "true"
 ALLOWED_HOSTS = [host for host in env("DJANGO_ALLOWED_HOSTS", "*").split(",") if host]
 
 INSTALLED_APPS = [
