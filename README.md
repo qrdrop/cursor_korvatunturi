@@ -82,6 +82,8 @@ The first-start admin bootstrap is controlled with:
 - `DJANGO_INITIAL_ADMIN_PASSWORD`
 - `DJANGO_INITIAL_ADMIN_EMAIL` (optional)
 
+Detailed setup and rotation guide: `docs/admin_credentials.md`
+
 ## Package Upload Documentation
 
 See `docs/package_uploads.md` for step-by-step API and frontend upload guidance.
