@@ -14,8 +14,11 @@
         <thead>
         <tr>
             <th>Name</th>
+            <th>Package</th>
             <th>Version</th>
             <th>Architecture</th>
+            <th>Parser</th>
+            <th>Dependencies</th>
             <th>Size</th>
             <th>Uploaded</th>
             <th>Download</th>
@@ -25,14 +28,24 @@
         {% for artifact in artifacts %}
             <tr>
                 <td>{{ artifact.name }}</td>
+                <td>{{ artifact.package_metadata.package_name|default:"-" }}</td>
                 <td>{{ artifact.version }}</td>
                 <td>{{ artifact.architecture }}</td>
+                <td>
+                    {{ artifact.package_metadata.metadata_json.parser|default:"-" }}
+                    {% if artifact.package_metadata.metadata_json.parsed_from_content %}
+                        (content)
+                    {% else %}
+                        (filename)
+                    {% endif %}
+                </td>
+                <td>{{ artifact.package_metadata.dependencies|join:", "|default:"-" }}</td>
                 <td>{{ artifact.size }}</td>
                 <td>{{ artifact.uploaded_at }}</td>
                 <td><a href="/repo/{{ repository.name }}/{{ artifact.path }}">download</a></td>
             </tr>
         {% empty %}
-            <tr><td colspan="6">No artifacts in this repository yet.</td></tr>
+            <tr><td colspan="9">No artifacts in this repository yet.</td></tr>
         {% endfor %}
         </tbody>
     </table>

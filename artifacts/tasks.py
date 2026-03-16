@@ -8,7 +8,14 @@ from auditing.services import log_audit_event
 @shared_task
 def extract_metadata_for_artifact(artifact_id: int) -> int:
     artifact = Artifact.objects.select_related("repository").get(id=artifact_id)
-    metadata = ArtifactMetadataExtractor.extract(artifact.repository.type, artifact.name)
+    metadata = ArtifactMetadataExtractor.extract(
+        artifact.repository.type,
+        artifact.name,
+        file_path=artifact.storage_path,
+    )
+    artifact.version = metadata.version or artifact.version
+    artifact.architecture = metadata.architecture or artifact.architecture
+    artifact.save(update_fields=["version", "architecture"])
     PackageMetadata.objects.update_or_create(
         artifact=artifact,
         defaults={

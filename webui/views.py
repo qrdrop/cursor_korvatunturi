@@ -99,7 +99,15 @@ class UploadArtifactView(LoginRequiredMixin, FormView):
         except ValueError as exc:
             form.add_error(None, str(exc))
             return self.form_invalid(form)
-        messages.success(self.request, f"Uploaded artifact {artifact.name}")
+        package_name = ""
+        try:
+            package_name = artifact.package_metadata.package_name
+        except Exception:
+            package_name = artifact.name
+        messages.success(
+            self.request,
+            f"Uploaded artifact {artifact.name} (package: {package_name}, version: {artifact.version or 'n/a'})",
+        )
         return redirect("webui-repository-detail", name=artifact.repository.name)
 
 

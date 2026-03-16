@@ -39,6 +39,8 @@ Service endpoints:
 - `POST /api/artifacts/upload/`
 - `GET /repo/<repository>/<path>`
 
+`GET /api/artifacts/` includes parsed package metadata (`package_name`, `dependencies`, `metadata_json`) extracted from uploaded package contents when available.
+
 ## Web UI Features
 
 - Browse all accessible packages: `/packages/`

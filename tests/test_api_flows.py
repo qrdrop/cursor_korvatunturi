@@ -1,5 +1,7 @@
 import tempfile
+from io import BytesIO
 from pathlib import Path
+from zipfile import ZIP_DEFLATED, ZipFile
 
 from django.contrib.auth import get_user_model
 from django.test import override_settings
@@ -38,6 +40,8 @@ class ApiFlowTests(APITestCase):
             format="multipart",
         )
         self.assertEqual(upload_response.status_code, 201, upload_response.content)
+        self.assertIn("metadata_json", upload_response.json())
+        self.assertIn("dependencies", upload_response.json())
         artifact_id = upload_response.json()["id"]
         artifact = Artifact.objects.get(id=artifact_id)
         self.assertEqual(artifact.repository_id, self.repo.id)
@@ -100,8 +104,47 @@ class ApiFlowTests(APITestCase):
         )
         self.assertEqual(response.status_code, 201, response.content)
 
+    def test_upload_parses_wheel_metadata_content(self):
+        wheel_bytes = self._build_wheel(
+            package_name="demo_pkg",
+            version="3.4.5",
+            requires_dist=["requests>=2.0", "urllib3>=2.0"],
+        )
+        response = self.client.post(
+            "/api/artifacts/upload/",
+            {
+                "repository": self.repo.id,
+                "file": self._make_file("demo_pkg-3.4.5-py3-none-any.whl", wheel_bytes),
+            },
+            format="multipart",
+        )
+        self.assertEqual(response.status_code, 201, response.content)
+        payload = response.json()
+        self.assertEqual(payload["package_name"], "demo_pkg")
+        self.assertIn("requests>=2.0", payload["dependencies"])
+        self.assertEqual(payload["metadata_json"]["parser"], "wheel-metadata")
+        self.assertTrue(payload["metadata_json"]["parsed_from_content"])
+
     @staticmethod
     def _make_file(name: str, content: bytes):
         from django.core.files.uploadedfile import SimpleUploadedFile
 
         return SimpleUploadedFile(name, content)
+
+    @staticmethod
+    def _build_wheel(package_name: str, version: str, requires_dist: list[str]) -> bytes:
+        metadata_lines = [
+            "Metadata-Version: 2.1",
+            f"Name: {package_name}",
+            f"Version: {version}",
+            "Summary: Demo package",
+        ]
+        metadata_lines.extend([f"Requires-Dist: {item}" for item in requires_dist])
+        metadata_body = "\n".join(metadata_lines) + "\n"
+        fileobj = BytesIO()
+        dist_info = f"{package_name}-{version}.dist-info"
+        with ZipFile(fileobj, "w", compression=ZIP_DEFLATED) as archive:
+            archive.writestr(f"{dist_info}/METADATA", metadata_body)
+            archive.writestr(f"{dist_info}/WHEEL", "Wheel-Version: 1.0\nGenerator: tests\nRoot-Is-Purelib: true\n")
+            archive.writestr(f"{dist_info}/RECORD", "")
+        return fileobj.getvalue()

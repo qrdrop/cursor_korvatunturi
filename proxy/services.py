@@ -74,19 +74,20 @@ def fetch_and_cache_remote_artifact(
             sha256.update(chunk)
 
         temp_uploaded = _TempUploadedFile(temp_file, filename, total_size)
-        metadata = ArtifactMetadataExtractor.extract(repository.type, filename)
+        filename_metadata = ArtifactMetadataExtractor.extract(repository.type, filename)
         storage_backend = storage_backend or LocalFileStorageBackend()
         storage_path = storage_backend.store(
             temp_uploaded,
             repository=repository.name,
             relative_path=artifact_path,
         )
+        metadata = ArtifactMetadataExtractor.extract(repository.type, filename, file_path=storage_path)
         artifact = Artifact.objects.create(
             repository=repository,
             name=filename,
             path=artifact_path,
-            version=metadata.version,
-            architecture=metadata.architecture,
+            version=metadata.version or filename_metadata.version,
+            architecture=metadata.architecture or filename_metadata.architecture,
             checksum=sha256.hexdigest(),
             size=total_size,
             storage_path=storage_path,
@@ -95,9 +96,9 @@ def fetch_and_cache_remote_artifact(
         )
         PackageMetadata.objects.create(
             artifact=artifact,
-            package_name=metadata.package_name,
-            version=metadata.version,
-            architecture=metadata.architecture,
+            package_name=metadata.package_name or filename_metadata.package_name,
+            version=metadata.version or filename_metadata.version,
+            architecture=metadata.architecture or filename_metadata.architecture,
             dependencies=metadata.dependencies,
             metadata_json=metadata.metadata_json,
         )

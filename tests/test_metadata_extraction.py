@@ -1,3 +1,5 @@
+import tempfile
+
 from django.test import SimpleTestCase
 
 from artifacts.services import ArtifactMetadataExtractor
@@ -61,3 +63,18 @@ class MetadataExtractorTests(SimpleTestCase):
         self.assertEqual(metadata.package_name, "windows10.0")
         self.assertEqual(metadata.version, "KB5030219")
         self.assertEqual(metadata.architecture, "x64")
+
+    def test_extract_msu_content_metadata(self):
+        with tempfile.NamedTemporaryFile(suffix=".msu") as handle:
+            handle.write(
+                b'<update title="Security Update for Windows 11 KB5030219" architecture="amd64" version="10.0.1"/>'
+            )
+            handle.flush()
+            metadata = ArtifactMetadataExtractor.extract(
+                Repository.Type.MSI,
+                "windows-update.msu",
+                file_path=handle.name,
+            )
+        self.assertEqual(metadata.version, "KB5030219")
+        self.assertEqual(metadata.architecture, "x64")
+        self.assertTrue(metadata.metadata_json.get("parsed_from_content"))

@@ -26,6 +26,11 @@ After upload, indexes are regenerated asynchronously:
 - RPM: `repodata` metadata
 - PyPI: simple index HTML
 
+Metadata is parsed from package content whenever possible and exposed in:
+
+- Web UI package/repository browse pages
+- `GET /api/artifacts/` response (`package_name`, `dependencies`, `metadata_json`)
+
 ## Option B: API Upload
 
 ```bash

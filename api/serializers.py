@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from artifacts.models import Artifact
+from artifacts.models import Artifact, PackageMetadata
 from repositories.models import Repository
 from repositories.policies import enabled_repository_types
 
@@ -26,7 +26,9 @@ class RepositorySerializer(serializers.ModelSerializer):
 
 class ArtifactSerializer(serializers.ModelSerializer):
     repository = serializers.SlugRelatedField(slug_field="name", read_only=True)
-    package_name = serializers.CharField(source="package_metadata.package_name", read_only=True)
+    package_name = serializers.SerializerMethodField()
+    dependencies = serializers.SerializerMethodField()
+    metadata_json = serializers.SerializerMethodField()
 
     class Meta:
         model = Artifact
@@ -43,7 +45,27 @@ class ArtifactSerializer(serializers.ModelSerializer):
             "uploaded_by",
             "is_cached",
             "package_name",
+            "dependencies",
+            "metadata_json",
         )
+
+    def get_package_name(self, obj):
+        try:
+            return obj.package_metadata.package_name
+        except PackageMetadata.DoesNotExist:
+            return ""
+
+    def get_dependencies(self, obj):
+        try:
+            return obj.package_metadata.dependencies
+        except PackageMetadata.DoesNotExist:
+            return []
+
+    def get_metadata_json(self, obj):
+        try:
+            return obj.package_metadata.metadata_json
+        except PackageMetadata.DoesNotExist:
+            return {}
 
 
 class ArtifactUploadSerializer(serializers.Serializer):
