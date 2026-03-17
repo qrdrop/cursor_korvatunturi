@@ -45,7 +45,7 @@ Service endpoints:
 
 - Browse all accessible packages: `/packages/`
 - Browse repository contents: `/repositories/<name>/`
-- Upload packages from frontend: `/upload/`
+- Upload packages from frontend (drag/drop + multi-file): `/upload/`
 - Admin repository creation UI: `/manage/repositories/new/`
 - Admin package-type policy UI: `/manage/repository-types/`
 

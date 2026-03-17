@@ -121,6 +121,126 @@ class ArtifactMetadataExtractor:
         return Repository.Type.GENERIC
 
     @classmethod
+    def validate_upload_content(cls, repository_type: str, filename: str, uploaded_file) -> None:
+        """Validate file content against intended repository/package type."""
+        lowered = filename.lower()
+        if repository_type == Repository.Type.GENERIC:
+            return
+        if repository_type == Repository.Type.DEB:
+            if not lowered.endswith(".deb"):
+                raise ValueError("Repository expects .deb packages.")
+            cls._validate_deb_content(uploaded_file)
+            return
+        if repository_type == Repository.Type.RPM:
+            if not lowered.endswith(".rpm"):
+                raise ValueError("Repository expects .rpm packages.")
+            cls._validate_rpm_content(uploaded_file)
+            return
+        if repository_type == Repository.Type.PYPI:
+            if lowered.endswith(".whl"):
+                cls._validate_wheel_content(uploaded_file)
+                return
+            if lowered.endswith(".tar.gz"):
+                cls._validate_sdist_content(uploaded_file)
+                return
+            raise ValueError("PyPI repository accepts only .whl or .tar.gz packages.")
+        if repository_type == Repository.Type.MSI:
+            if lowered.endswith(".msi"):
+                cls._validate_msi_content(uploaded_file)
+                return
+            if lowered.endswith(".msu"):
+                cls._validate_msu_content(uploaded_file)
+                return
+            raise ValueError("Windows repository accepts only .msi or .msu packages.")
+
+    @classmethod
+    def _read_uploaded_prefix(cls, uploaded_file, size: int = 64 * 1024) -> bytes:
+        try:
+            position = uploaded_file.tell()
+        except Exception:
+            position = 0
+        uploaded_file.seek(0)
+        prefix = uploaded_file.read(size)
+        uploaded_file.seek(position)
+        return prefix
+
+    @classmethod
+    def _validate_deb_content(cls, uploaded_file) -> None:
+        prefix = cls._read_uploaded_prefix(uploaded_file, size=128 * 1024)
+        if not prefix.startswith(b"!<arch>\n"):
+            raise ValueError("Invalid .deb package content (missing ar archive header).")
+        if b"debian-binary" not in prefix and DebFile is None:
+            raise ValueError("Invalid .deb package content.")
+
+    @classmethod
+    def _validate_rpm_content(cls, uploaded_file) -> None:
+        prefix = cls._read_uploaded_prefix(uploaded_file, size=8)
+        if not prefix.startswith(b"\xed\xab\xee\xdb"):
+            raise ValueError("Invalid .rpm package content (RPM magic mismatch).")
+
+    @classmethod
+    def _validate_wheel_content(cls, uploaded_file) -> None:
+        try:
+            uploaded_file.seek(0)
+            if not zipfile.is_zipfile(uploaded_file):
+                raise ValueError("Invalid .whl package content (not a zip archive).")
+            uploaded_file.seek(0)
+            with zipfile.ZipFile(uploaded_file, "r") as wheel_archive:
+                names = wheel_archive.namelist()
+            if not any(name.endswith(".dist-info/METADATA") for name in names):
+                raise ValueError("Invalid .whl package content (missing .dist-info/METADATA).")
+        except ValueError:
+            raise
+        except Exception:
+            raise ValueError("Invalid .whl package content.")
+        finally:
+            uploaded_file.seek(0)
+
+    @classmethod
+    def _validate_sdist_content(cls, uploaded_file) -> None:
+        try:
+            uploaded_file.seek(0)
+            with tarfile.open(fileobj=uploaded_file, mode="r:gz") as sdist_archive:
+                names = sdist_archive.getnames()
+            has_expected = any(name.endswith("PKG-INFO") for name in names) or any(
+                name.endswith("setup.py") or name.endswith("pyproject.toml") for name in names
+            )
+            if not has_expected:
+                raise ValueError("Invalid .tar.gz package content (missing packaging metadata files).")
+        except ValueError:
+            raise
+        except Exception:
+            raise ValueError("Invalid .tar.gz package content.")
+        finally:
+            uploaded_file.seek(0)
+
+    @classmethod
+    def _validate_msi_content(cls, uploaded_file) -> None:
+        prefix = cls._read_uploaded_prefix(uploaded_file, size=8)
+        if not prefix.startswith(b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1"):
+            raise ValueError("Invalid .msi package content (OLE signature mismatch).")
+
+    @classmethod
+    def _validate_msu_content(cls, uploaded_file) -> None:
+        prefix = cls._read_uploaded_prefix(uploaded_file, size=8)
+        if prefix.startswith(b"MSCF"):
+            return
+        # Some repackaged update bundles are ZIP containers with CAB/XML payloads.
+        try:
+            uploaded_file.seek(0)
+            if zipfile.is_zipfile(uploaded_file):
+                uploaded_file.seek(0)
+                with zipfile.ZipFile(uploaded_file, "r") as archive:
+                    names = [name.lower() for name in archive.namelist()]
+                if any(name.endswith(".cab") for name in names) or any(name.endswith(".xml") for name in names):
+                    return
+        except Exception:
+            pass
+        finally:
+            uploaded_file.seek(0)
+        raise ValueError("Invalid .msu package content (expected CAB/ZIP update package).")
+
+    @classmethod
     def extract(cls, repository_type: str, filename: str, file_path: str | None = None) -> ExtractedMetadata:
         if repository_type == Repository.Type.DEB:
             return cls._extract_deb(filename, file_path)
@@ -523,6 +643,7 @@ def process_artifact_upload(
     detected_type = ArtifactMetadataExtractor.detect_repository_type(uploaded_file.name)
     if repository.type != Repository.Type.GENERIC and detected_type != repository.type:
         raise ValueError(f"Uploaded artifact type '{detected_type}' does not match repository type.")
+    ArtifactMetadataExtractor.validate_upload_content(repository.type, uploaded_file.name, uploaded_file)
 
     storage_backend = storage_backend or LocalFileStorageBackend()
     filename_metadata = ArtifactMetadataExtractor.extract(repository.type, uploaded_file.name)

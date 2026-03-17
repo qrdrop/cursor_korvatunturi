@@ -17,9 +17,11 @@ You can upload packages from either the web UI or the API.
 1. Open `/login/` and sign in.
 2. Go to `/upload/`.
 3. Select repository.
-4. Select package file.
-5. Optional: provide SHA256 checksum.
+4. Drag-and-drop one or multiple package files (or click to browse).
+5. Optional: provide SHA256 checksum for single-file uploads.
 6. Submit upload.
+
+Upload validation checks package content signatures (not just file names/extensions) so invalid files are rejected.
 
 After upload, indexes are regenerated asynchronously:
 - Debian: `Packages`, `Packages.gz`, `Release`

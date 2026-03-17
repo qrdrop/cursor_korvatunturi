@@ -6,9 +6,27 @@ from repositories.models import Repository, RepositoryTypePolicy
 from repositories.policies import repository_type_choices
 
 
+class MultipleFileInput(forms.ClearableFileInput):
+    allow_multiple_selected = True
+
+
+class MultipleFileField(forms.FileField):
+    widget = MultipleFileInput
+
+    def clean(self, data, initial=None):
+        if not data:
+            if self.required:
+                raise forms.ValidationError("Please select at least one package file.")
+            return []
+        single_file_clean = super().clean
+        if isinstance(data, (list, tuple)):
+            return [single_file_clean(item, initial) for item in data]
+        return [single_file_clean(data, initial)]
+
+
 class ArtifactUploadForm(forms.Form):
     repository = forms.ModelChoiceField(queryset=Repository.objects.none())
-    file = forms.FileField()
+    files = MultipleFileField()
     expected_checksum = forms.CharField(required=False, min_length=64, max_length=64)
 
     def __init__(self, *args, repository_queryset=None, **kwargs):

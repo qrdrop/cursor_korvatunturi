@@ -31,11 +31,16 @@ class ApiFlowTests(APITestCase):
         UserRole.objects.create(user=self.user, repository=self.repo, role=UserRole.Role.MAINTAINER)
 
     def test_upload_list_and_download_artifact(self):
+        wheel_bytes = self._build_wheel(
+            package_name="demo_pkg",
+            version="1.2.3",
+            requires_dist=[],
+        )
         upload_response = self.client.post(
             "/api/artifacts/upload/",
             {
                 "repository": self.repo.id,
-                "file": self._make_file("demo_pkg-1.2.3-py3-none-any.whl", b"wheel-bytes"),
+                "file": self._make_file("demo_pkg-1.2.3-py3-none-any.whl", wheel_bytes),
             },
             format="multipart",
         )
@@ -53,7 +58,7 @@ class ApiFlowTests(APITestCase):
         download_response = self.client.get(f"/repo/{self.repo.name}/{artifact.path}")
         self.assertEqual(download_response.status_code, 200)
         payload = b"".join(download_response.streaming_content)
-        self.assertEqual(payload, b"wheel-bytes")
+        self.assertEqual(payload, wheel_bytes)
         self.assertEqual(DownloadLog.objects.count(), 1)
 
     def test_repository_create_requires_admin(self):
@@ -76,11 +81,16 @@ class ApiFlowTests(APITestCase):
         self.assertEqual(response.status_code, 400)
 
     def test_upload_rejects_checksum_mismatch(self):
+        wheel_bytes = self._build_wheel(
+            package_name="demo_pkg",
+            version="2.0.0",
+            requires_dist=[],
+        )
         response = self.client.post(
             "/api/artifacts/upload/",
             {
                 "repository": self.repo.id,
-                "file": self._make_file("demo_pkg-2.0.0-py3-none-any.whl", b"wheel-bytes"),
+                "file": self._make_file("demo_pkg-2.0.0-py3-none-any.whl", wheel_bytes),
                 "expected_checksum": "0" * 64,
             },
             format="multipart",
@@ -98,7 +108,7 @@ class ApiFlowTests(APITestCase):
             "/api/artifacts/upload/",
             {
                 "repository": windows_repo.id,
-                "file": self._make_file("windows10.0-KB5030219-x64.msu", b"msu-bytes"),
+                "file": self._make_file("windows10.0-KB5030219-x64.msu", b"MSCF\x00\x00\x00\x00payload"),
             },
             format="multipart",
         )
@@ -124,6 +134,17 @@ class ApiFlowTests(APITestCase):
         self.assertIn("requests>=2.0", payload["dependencies"])
         self.assertEqual(payload["metadata_json"]["parser"], "wheel-metadata")
         self.assertTrue(payload["metadata_json"]["parsed_from_content"])
+
+    def test_upload_rejects_invalid_content_for_extension(self):
+        response = self.client.post(
+            "/api/artifacts/upload/",
+            {
+                "repository": self.repo.id,
+                "file": self._make_file("demo_pkg-1.0.0-py3-none-any.whl", b"not-a-wheel"),
+            },
+            format="multipart",
+        )
+        self.assertEqual(response.status_code, 400)
 
     @staticmethod
     def _make_file(name: str, content: bytes):

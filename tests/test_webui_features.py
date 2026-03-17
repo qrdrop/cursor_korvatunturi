@@ -1,5 +1,7 @@
 import tempfile
+from io import BytesIO
 from pathlib import Path
+from zipfile import ZIP_DEFLATED, ZipFile
 
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -34,15 +36,32 @@ class WebUiFeatureTests(TestCase):
 
     def test_frontend_upload_flow(self):
         self.client.login(username="web", password="pw")
+        wheel_bytes = self._build_wheel("demo_pkg", "1.0.0")
         response = self.client.post(
             "/upload/",
             {
                 "repository": self.repo.id,
-                "file": SimpleUploadedFile("demo_pkg-1.0.0-py3-none-any.whl", b"wheel"),
+                "files": SimpleUploadedFile("demo_pkg-1.0.0-py3-none-any.whl", wheel_bytes),
             },
         )
         self.assertEqual(response.status_code, 302)
         self.assertEqual(Artifact.objects.count(), 1)
+
+    def test_frontend_multi_upload_flow(self):
+        self.client.login(username="web", password="pw")
+        files = [
+            SimpleUploadedFile("demo_pkg-1.0.0-py3-none-any.whl", self._build_wheel("demo_pkg", "1.0.0")),
+            SimpleUploadedFile("demo_pkg-1.1.0-py3-none-any.whl", self._build_wheel("demo_pkg", "1.1.0")),
+        ]
+        response = self.client.post(
+            "/upload/",
+            {
+                "repository": self.repo.id,
+                "files": files,
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(Artifact.objects.count(), 2)
 
     def test_package_browse_page(self):
         Artifact.objects.create(
@@ -71,3 +90,14 @@ class WebUiFeatureTests(TestCase):
         self.client.login(username="web-admin", password="pw")
         response = self.client.get("/manage/repositories/new/")
         self.assertEqual(response.status_code, 200)
+
+    @staticmethod
+    def _build_wheel(package_name: str, version: str) -> bytes:
+        metadata = f"Metadata-Version: 2.1\nName: {package_name}\nVersion: {version}\nSummary: Test\n"
+        fileobj = BytesIO()
+        dist_info = f"{package_name}-{version}.dist-info"
+        with ZipFile(fileobj, "w", compression=ZIP_DEFLATED) as archive:
+            archive.writestr(f"{dist_info}/METADATA", metadata)
+            archive.writestr(f"{dist_info}/WHEEL", "Wheel-Version: 1.0\nGenerator: tests\nRoot-Is-Purelib: true\n")
+            archive.writestr(f"{dist_info}/RECORD", "")
+        return fileobj.getvalue()

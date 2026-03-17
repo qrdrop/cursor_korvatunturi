@@ -89,26 +89,52 @@ class UploadArtifactView(LoginRequiredMixin, FormView):
         return kwargs
 
     def form_valid(self, form):
-        try:
-            artifact = process_artifact_upload(
-                repository=form.cleaned_data["repository"],
-                uploaded_file=form.cleaned_data["file"],
-                user=self.request.user,
-                expected_checksum=form.cleaned_data.get("expected_checksum") or None,
+        repository = form.cleaned_data["repository"]
+        expected_checksum = form.cleaned_data.get("expected_checksum") or None
+        uploaded_files = form.cleaned_data["files"]
+        if expected_checksum and len(uploaded_files) > 1:
+            form.add_error(
+                "expected_checksum",
+                "Expected checksum can only be used when uploading exactly one file.",
             )
-        except ValueError as exc:
-            form.add_error(None, str(exc))
             return self.form_invalid(form)
-        package_name = ""
-        try:
-            package_name = artifact.package_metadata.package_name
-        except Exception:
-            package_name = artifact.name
-        messages.success(
-            self.request,
-            f"Uploaded artifact {artifact.name} (package: {package_name}, version: {artifact.version or 'n/a'})",
-        )
-        return redirect("webui-repository-detail", name=artifact.repository.name)
+        successes = []
+        failures = []
+        for uploaded_file in uploaded_files:
+            try:
+                artifact = process_artifact_upload(
+                    repository=repository,
+                    uploaded_file=uploaded_file,
+                    user=self.request.user,
+                    expected_checksum=expected_checksum,
+                )
+                successes.append(artifact)
+            except ValueError as exc:
+                failures.append((uploaded_file.name, str(exc)))
+
+        for artifact in successes:
+            try:
+                package_name = artifact.package_metadata.package_name
+            except Exception:
+                package_name = artifact.name
+            messages.success(
+                self.request,
+                f"Uploaded {artifact.name} (package: {package_name}, version: {artifact.version or 'n/a'})",
+            )
+
+        for filename, error in failures:
+            messages.error(self.request, f"Failed upload for {filename}: {error}")
+
+        if failures and not successes:
+            form.add_error(None, "No files were uploaded successfully. See errors above.")
+            return self.form_invalid(form)
+
+        if successes:
+            messages.info(self.request, f"Successfully uploaded {len(successes)} package(s).")
+            return redirect("webui-repository-detail", name=repository.name)
+
+        form.add_error(None, "Please select at least one valid package file.")
+        return self.form_invalid(form)
 
 
 class StaffRequiredMixin(UserPassesTestMixin):

@@ -2,11 +2,82 @@
 {% block content %}
 <div class="card" style="max-width: 700px;">
     <h2>Upload Package</h2>
-    <p>Upload .deb, .rpm, .whl/.tar.gz, .msi/.msu or generic files to repositories where you have maintainer/admin role.</p>
-    <form method="post" enctype="multipart/form-data">
+    <p>Upload .deb, .rpm, .whl/.tar.gz, .msi/.msu or generic files. Drag and drop one or multiple files below.</p>
+    <form method="post" enctype="multipart/form-data" id="upload-form">
         {% csrf_token %}
-        {{ form.as_p }}
+        {% if form.non_field_errors %}
+            <div>
+                {% for error in form.non_field_errors %}
+                    <p style="color:#b91c1c;">{{ error }}</p>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <label for="{{ form.repository.id_for_label }}">Repository</label>
+        {{ form.repository }}
+        {% for error in form.repository.errors %}<p style="color:#b91c1c;">{{ error }}</p>{% endfor %}
+
+        <label for="{{ form.expected_checksum.id_for_label }}">Expected SHA256 (optional)</label>
+        {{ form.expected_checksum }}
+        <p style="margin:6px 0;color:#6b7280;">Use only for single-file uploads. Leave empty for multi-file uploads.</p>
+        {% for error in form.expected_checksum.errors %}<p style="color:#b91c1c;">{{ error }}</p>{% endfor %}
+
+        <label for="{{ form.files.id_for_label }}">Package files</label>
+        <div id="drop-zone" style="margin-top:8px; border:2px dashed #3b82f6; background:#eff6ff; padding:24px; border-radius:8px; text-align:center;">
+            Drag and drop package files here, or click to browse
+            {{ form.files }}
+        </div>
+        {% for error in form.files.errors %}<p style="color:#b91c1c;">{{ error }}</p>{% endfor %}
+        <div id="selected-files" style="margin-top:10px; color:#1f2937;"></div>
         <button class="btn" type="submit">Upload</button>
     </form>
 </div>
+
+<script>
+(() => {
+    const dropZone = document.getElementById("drop-zone");
+    const fileInput = document.getElementById("{{ form.files.id_for_label }}");
+    const selectedFiles = document.getElementById("selected-files");
+    if (!dropZone || !fileInput || !selectedFiles) return;
+
+    fileInput.style.display = "none";
+
+    const renderFileList = () => {
+        if (!fileInput.files || fileInput.files.length === 0) {
+            selectedFiles.textContent = "No files selected.";
+            return;
+        }
+        const names = Array.from(fileInput.files).map((file) => `${file.name} (${file.size} bytes)`);
+        selectedFiles.innerHTML = "<strong>Selected files:</strong><br>" + names.join("<br>");
+    };
+
+    dropZone.addEventListener("click", () => fileInput.click());
+    fileInput.addEventListener("change", renderFileList);
+
+    ["dragenter", "dragover"].forEach((eventName) => {
+        dropZone.addEventListener(eventName, (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            dropZone.style.background = "#dbeafe";
+        });
+    });
+
+    ["dragleave", "drop"].forEach((eventName) => {
+        dropZone.addEventListener(eventName, (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            dropZone.style.background = "#eff6ff";
+        });
+    });
+
+    dropZone.addEventListener("drop", (event) => {
+        const dt = event.dataTransfer;
+        if (!dt || !dt.files) return;
+        fileInput.files = dt.files;
+        renderFileList();
+    });
+
+    renderFileList();
+})();
+</script>
 {% endblock %}
