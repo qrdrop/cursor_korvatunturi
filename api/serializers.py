@@ -26,9 +26,9 @@ class RepositorySerializer(serializers.ModelSerializer):
 
 class ArtifactSerializer(serializers.ModelSerializer):
     repository = serializers.SlugRelatedField(slug_field="name", read_only=True)
-    package_name = serializers.SerializerMethodField()
-    dependencies = serializers.SerializerMethodField()
-    metadata_json = serializers.SerializerMethodField()
+    package_name = serializers.CharField(read_only=True)
+    dependencies = serializers.ListField(child=serializers.CharField(), read_only=True)
+    metadata_json = serializers.JSONField(read_only=True)
 
     class Meta:
         model = Artifact
@@ -49,23 +49,17 @@ class ArtifactSerializer(serializers.ModelSerializer):
             "metadata_json",
         )
 
-    def get_package_name(self, obj):
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
         try:
-            return obj.package_metadata.package_name
+            representation["package_name"] = instance.package_metadata.package_name
+            representation["dependencies"] = instance.package_metadata.dependencies
+            representation["metadata_json"] = instance.package_metadata.metadata_json
         except PackageMetadata.DoesNotExist:
-            return ""
-
-    def get_dependencies(self, obj):
-        try:
-            return obj.package_metadata.dependencies
-        except PackageMetadata.DoesNotExist:
-            return []
-
-    def get_metadata_json(self, obj):
-        try:
-            return obj.package_metadata.metadata_json
-        except PackageMetadata.DoesNotExist:
-            return {}
+            representation["package_name"] = ""
+            representation["dependencies"] = []
+            representation["metadata_json"] = {}
+        return representation
 
 
 class ArtifactUploadSerializer(serializers.Serializer):

@@ -63,6 +63,23 @@ class WebUiFeatureTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertEqual(Artifact.objects.count(), 2)
 
+    def test_frontend_multi_upload_rejects_single_checksum_mode(self):
+        self.client.login(username="web", password="pw")
+        files = [
+            SimpleUploadedFile("demo_pkg-1.0.0-py3-none-any.whl", self._build_wheel("demo_pkg", "1.0.0")),
+            SimpleUploadedFile("demo_pkg-1.1.0-py3-none-any.whl", self._build_wheel("demo_pkg", "1.1.0")),
+        ]
+        response = self.client.post(
+            "/upload/",
+            {
+                "repository": self.repo.id,
+                "files": files,
+                "expected_checksum": "0" * 64,
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Expected checksum can only be used")
+
     def test_package_browse_page(self):
         Artifact.objects.create(
             repository=self.repo,
