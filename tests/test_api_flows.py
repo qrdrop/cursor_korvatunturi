@@ -146,6 +146,33 @@ class ApiFlowTests(APITestCase):
         )
         self.assertEqual(response.status_code, 400)
 
+    def test_upload_rejects_duplicate_sha256(self):
+        wheel_bytes = self._build_wheel(
+            package_name="demo_pkg",
+            version="4.0.0",
+            requires_dist=[],
+        )
+        first = self.client.post(
+            "/api/artifacts/upload/",
+            {
+                "repository": self.repo.id,
+                "file": self._make_file("demo_pkg-4.0.0-py3-none-any.whl", wheel_bytes),
+            },
+            format="multipart",
+        )
+        self.assertEqual(first.status_code, 201, first.content)
+
+        second = self.client.post(
+            "/api/artifacts/upload/",
+            {
+                "repository": self.repo.id,
+                "file": self._make_file("demo_pkg_copy-4.0.0-py3-none-any.whl", wheel_bytes),
+            },
+            format="multipart",
+        )
+        self.assertEqual(second.status_code, 400, second.content)
+        self.assertIn("already uploaded", str(second.json()).lower())
+
     @staticmethod
     def _make_file(name: str, content: bytes):
         from django.core.files.uploadedfile import SimpleUploadedFile

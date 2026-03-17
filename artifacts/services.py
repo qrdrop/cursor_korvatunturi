@@ -650,6 +650,12 @@ def process_artifact_upload(
     checksum = calculate_sha256(uploaded_file)
     if expected_checksum and checksum != expected_checksum:
         raise ValueError("Checksum validation failed")
+    existing_artifact = Artifact.objects.filter(repository=repository, checksum=checksum).first()
+    if existing_artifact:
+        raise ValueError(
+            "Package already uploaded with the same SHA256 "
+            f"(artifact: {existing_artifact.name}, path: {existing_artifact.path}, checksum: {checksum})."
+        )
 
     artifact_path = _default_repo_relative_path(
         repository,

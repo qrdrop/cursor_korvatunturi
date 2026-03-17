@@ -22,6 +22,7 @@ You can upload packages from either the web UI or the API.
 6. Submit upload.
 
 Upload validation checks package content signatures (not just file names/extensions) so invalid files are rejected.
+Duplicate uploads are prevented per repository using SHA256 checksum comparison. If the same package content is uploaded again, the system reports that it was already uploaded.
 
 After upload, indexes are regenerated asynchronously:
 - Debian: `Packages`, `Packages.gz`, `Release`
