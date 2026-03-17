@@ -248,10 +248,12 @@ components:
           type: string
           readOnly: true
         dependencies:
-          type: string
+          type: array
+          items:
+            type: string
           readOnly: true
         metadata_json:
-          type: string
+          type: object
           readOnly: true
       required:
       - name
