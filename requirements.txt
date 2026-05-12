@@ -1,0 +1,16 @@
+Django>=5.2.0
+djangorestframework>=3.16.0
+psycopg[binary]>=3.2.0
+celery>=5.5.0
+redis>=6.0.0
+django-redis>=6.0.0
+requests>=2.32.0
+gunicorn>=23.0.0
+coverage>=7.8.0
+packaging>=25.0
+inflection>=0.5.1
+uritemplate>=4.2.0
+rpmfile>=2.1.0
+python-debian>=1.1.0
+olefile>=0.47
+zstandard>=0.25.0

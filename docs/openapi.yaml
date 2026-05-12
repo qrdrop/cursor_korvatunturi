@@ -1,0 +1,277 @@
+openapi: 3.0.2
+info:
+  title: ''
+  version: ''
+paths:
+  /api/repositories/:
+    get:
+      operationId: listRepositories
+      description: ''
+      parameters: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Repository'
+          description: ''
+      tags:
+      - api
+    post:
+      operationId: createRepository
+      description: ''
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Repository'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Repository'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Repository'
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Repository'
+          description: ''
+      tags:
+      - api
+  /api/artifacts/:
+    get:
+      operationId: listArtifacts
+      description: ''
+      parameters: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Artifact'
+          description: ''
+      tags:
+      - api
+  /repo/{repository}/{artifact_path}:
+    get:
+      operationId: retrieveArtifactDownload
+      description: ''
+      parameters:
+      - name: repository
+        in: path
+        required: true
+        description: ''
+        schema:
+          type: string
+      - name: artifact_path
+        in: path
+        required: true
+        description: ''
+        schema:
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: ''
+      tags:
+      - repo
+  /simple/:
+    get:
+      operationId: listPyPISimpleIndices
+      description: ''
+      parameters: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items: {}
+          description: ''
+      tags:
+      - simple
+  /simple/{package_name}/:
+    get:
+      operationId: retrievePyPISimpleIndexDetail
+      description: ''
+      parameters:
+      - name: package_name
+        in: path
+        required: true
+        description: ''
+        schema:
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: ''
+      tags:
+      - simple
+  /api/auth/token/:
+    post:
+      operationId: createAuthToken
+      description: ''
+      parameters: []
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AuthToken'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AuthToken'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthToken'
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthToken'
+          description: ''
+      tags:
+      - api
+  /api/artifacts/upload/:
+    post:
+      operationId: createArtifactUpload
+      description: ''
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema: {}
+          application/x-www-form-urlencoded:
+            schema: {}
+          multipart/form-data:
+            schema: {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema: {}
+          description: ''
+      tags:
+      - api
+components:
+  schemas:
+    Repository:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 120
+        type:
+          enum:
+          - deb
+          - rpm
+          - pypi
+          - msi
+          - generic
+          type: string
+        mode:
+          enum:
+          - local
+          - remote
+          - virtual
+          type: string
+        remote_url:
+          type: string
+          format: uri
+          nullable: true
+          maxLength: 200
+          pattern: "^(?:[a-z0-9.+-]*)://(?:[^\\s:@/]+(?::[^\\s:@/]*)?@)?(?:(?:0|25[0-5]|2[0-4][0-9]|1[0-9]?[0-9]?|[1-9][0-9]?)(?:\\\
+            .(?:0|25[0-5]|2[0-4][0-9]|1[0-9]?[0-9]?|[1-9][0-9]?)){3}|\\[[0-9a-f:.]+\\\
+            ]|([a-z\xA1-\uFFFF0-9](?:[a-z\xA1-\uFFFF0-9-]{0,61}[a-z\xA1-\uFFFF0-9])?(?:\\\
+            .(?!-)[a-z\xA1-\uFFFF0-9-]{1,63}(?<!-))*\\.(?!-)(?:[a-z\xA1-\uFFFF-]{2,63}|xn--[a-z0-9]{1,59})(?<!-)\\\
+            .?|localhost))(?::[0-9]{1,5})?(?:[/?#][^\\s]*)?\\z"
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - name
+      - type
+    Artifact:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        repository:
+          type: string
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+        path:
+          type: string
+          maxLength: 512
+        version:
+          type: string
+          maxLength: 128
+        architecture:
+          type: string
+          maxLength: 64
+        checksum:
+          type: string
+          maxLength: 64
+        size:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+        uploaded_at:
+          type: string
+          format: date-time
+          readOnly: true
+        uploaded_by:
+          type: integer
+          nullable: true
+        is_cached:
+          type: boolean
+        package_name:
+          type: string
+          readOnly: true
+        dependencies:
+          type: array
+          items:
+            type: string
+          readOnly: true
+        metadata_json:
+          type: object
+          readOnly: true
+      required:
+      - name
+      - path
+      - checksum
+      - size
+    AuthToken:
+      type: object
+      properties:
+        username:
+          type: string
+          writeOnly: true
+        password:
+          type: string
+          writeOnly: true
+        token:
+          type: string
+          readOnly: true
+      required:
+      - username
+      - password

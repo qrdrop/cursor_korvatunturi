@@ -1,0 +1,1 @@
+"""Repository domain app."""

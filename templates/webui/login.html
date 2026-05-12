@@ -1,0 +1,11 @@
+{% extends "webui/base.html" %}
+{% block content %}
+<div class="card" style="max-width: 460px;">
+    <h2>Sign in</h2>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button class="btn" type="submit">Login</button>
+    </form>
+</div>
+{% endblock %}

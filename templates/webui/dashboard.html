@@ -1,0 +1,34 @@
+{% extends "webui/base.html" %}
+{% block content %}
+<div class="card">
+    <h2>Repository Dashboard</h2>
+    <p>Total accessible repositories: <strong>{{ repositories|length }}</strong></p>
+    <p>Total accessible artifacts: <strong>{{ artifact_count }}</strong></p>
+</div>
+
+<div class="card">
+    <h3>Repositories</h3>
+    <table>
+        <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Mode</th>
+            <th>Created</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for repository in repositories %}
+            <tr>
+                <td><a href="{% url 'webui-repository-detail' name=repository.name %}">{{ repository.name }}</a></td>
+                <td>{{ repository.type }}</td>
+                <td>{{ repository.mode }}</td>
+                <td>{{ repository.created_at }}</td>
+            </tr>
+        {% empty %}
+            <tr><td colspan="4">No repositories available for your user.</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
